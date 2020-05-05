@@ -247,22 +247,6 @@ void imprimir_pantalla(void)
 int main(void)
 {
 
-    imprimir_referencia_1();
-    printf("|%s|\n", string_1);
-    imprimir_medido();
-
-    imprimir_referencia_2();
-    printf("|%s|\n", string_1);
-
-    imprimir_medido();
-    printf("|%s|\n", string_2);
-
-    imprimir_numeros();
-    printf("|%s|\n", string_2);
-
-    imprimir_notas();
-    printf("|%s|\n", string_2);
-
   /*
     for (int i=0; i < 32; i++)
     {
@@ -273,6 +257,7 @@ int main(void)
     }
   */
 
+    /*
     printf("\n");
     imprimir_pantalla();
     printf("|%s|\n", string_1);
@@ -327,8 +312,88 @@ int main(void)
     imprimir_pantalla();
     printf("|%s|\n", string_1);
     printf("|%s|\n", string_2);
+    */
 
+    printf("\n");
+    printf("\n");
 
+    char entrada;
+    printf(">> ");
+    scanf("%s", &entrada);
+    while (entrada != '0')
+    {
+      printf("\n");
+      imprimir_pantalla();
+      printf("|%s|\n", string_1);
+      printf("|%s|\n", string_2);
+      printf(">> ");
+      scanf("%s", &entrada);
+
+      if (entrada == 'm')
+      {
+        if (selector == 0 & modo == 0)
+        {
+          modo = 1;
+        }
+        else if (selector == 1 & modo == 0)
+        {
+          modo = 2;
+        }
+        else
+        {
+          modo = 0;
+        }
+      }
+      else if (entrada == 'a' | entrada == 'd')
+      {
+        if (modo == 0)
+        {
+          selector = (selector + 1)%2;
+        }
+        else if (modo == 1)
+        {
+          if (cuerda_actual == 1 & entrada == 'a')
+          {
+            //
+          }
+          else if (cuerda_actual == 6 & entrada == 'd')
+          {
+            //
+          }
+          else if (entrada == 'a')
+          {
+            cuerda_actual --;
+          }
+          else if (entrada == 'd')
+          {
+            cuerda_actual ++;
+          }
+        }
+        else
+        {
+          int n = freq_cuerdas[cuerda_actual - 1];
+          if (n == 0 & entrada == 'a')
+          {
+            //
+          }
+          else if (n == 31 & entrada == 'd')
+          {
+            //
+          }
+          else if (entrada == 'a')
+          {
+            freq_cuerdas[cuerda_actual - 1] = freq_cuerdas[cuerda_actual - 1] - 1;
+          }
+          else if (entrada == 'd')
+          {
+            freq_cuerdas[cuerda_actual - 1] = freq_cuerdas[cuerda_actual - 1] + 1;
+          }
+        }
+      }
+
+      printf("%d\n", modo);
+
+    }
 
 
     return 0;
