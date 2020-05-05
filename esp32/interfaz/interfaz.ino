@@ -17,8 +17,6 @@ char *tabla_notas[32] = {
   "C4 ", "C#4", "D4 ", "D#4", "E4 ", "F4 ", "F#4", "G4 "
 };
 
-
-
 uint8_t cuerda_actual = 1;
 
 uint8_t freq_cuerdas[6] = {28, 23, 19, 14, 9, 4};  // EADGBE -> {28(E4), 23(B3), 19(G3), 14(D3), 9(A2), 4(E2)}
