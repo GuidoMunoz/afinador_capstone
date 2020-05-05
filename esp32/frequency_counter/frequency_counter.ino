@@ -1,5 +1,5 @@
-#include esp32_config/esp32-hal-timer.h
-#include esp32_config/esp32-hal-gpio.h
+#include "esp32_config/esp32-hal-timer.h"
+#include "esp32_config/esp32-hal-gpio.h"
 
 // String frequencies
 #define EL 82.41
