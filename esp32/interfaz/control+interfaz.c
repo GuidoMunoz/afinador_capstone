@@ -3,13 +3,13 @@
 
 //Define parameter
 #define epsilon 0.01  // 0.01
-#define MAX 100  // 100
-#define MIN -100  // -100
-#define Kp 10  // 10
-#define Ki 0.5  // 0.5
-#define Kd -0.5  // -0.5
+#define MAX 1  // 100
+#define MIN -1  // -100
+#define Kp 0.1  // 10
+#define Ki 0.005  // 0.5
+#define Kd -0.005  // -0.5
 
-float k[6] = {26.3, 17.8, 14, 5.71, 3.27, 1.73};
+float k[6] = {2631.1, 1782.1, 1400.2, 571, 327, 173};
 
 double error, error_anterior, salida_PID;
 double integral, derivada;
@@ -389,10 +389,13 @@ int main(void)
           }
         }
       }
+      if (entrada == 'c')
+        {
+          control();
+        }
 
 
-
-      control();
+      // control();
 
 
     }
