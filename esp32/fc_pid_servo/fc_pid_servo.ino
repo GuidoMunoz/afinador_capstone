@@ -35,6 +35,24 @@ void IRAM_ATTR isr(){
   }
 }
 
+void freq_counter_init(){
+  pinMode(freqinput, INPUT); //Entrada de freq como input
+  attachInterrupt(button1.PIN, isr, RISING); //Interrupcion a ejecutarse en flanco de subida
+  timer = timerBegin(0, 80, true); //set up del timer
+}
+
+bool get_frequency(){
+  if(period < 10^6){
+    if((period!= 0)&&(oldperiod!=0)&&(oldoldperiod!=0)){
+      return 3/(period+oldperiod+oldoldperiod)
+    }
+    else{
+      return 777.77 //Dummy para hacer saber al sistema que no hay salida aun
+    }
+  }
+}
+
+
 ///////////////////
 //PID//////////////
 //////////////////
