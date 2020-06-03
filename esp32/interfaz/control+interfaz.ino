@@ -1,14 +1,34 @@
-// https://codeshare.io/aVEbg9
+// https://codeshare.io/G7mvZE
+
+// Botones: https://github.com/espressif/arduino-esp32/blob/master/libraries/ESP32/examples/GPIO/GPIOInterrupt/GPIOInterrupt.ino
 
 #include <stdio.h>
 #include <math.h>
+#include <Arduino.h>
+#include <LiquidCrystal.h>
+
+// Se configuran los pines
+LiquidCrystal lcd(13, 12, 14, 27, 26, 25);
+// LiquidCrystal(rs, enable, d4, d5, d6, d7)
+// D13 -> rs, D12 -> enable, D14 -> d4, D27 -> d5, D26 -> d6, D25 -> d7
+
+struct Button {
+  const uint8_t PIN;
+  // const char type;
+  bool pressed;
+};
+
+Button button_enter = {5, false};  // D5
+Button button_left = {21, false};  // D21
+Button button_right = {18, false};  // D18
+Button button_control = {19, false};  // D19
 
 //Define parameter
 #define epsilon 0.01  // 0.01
 #define MAX 1  // 100
 #define MIN -1  // -100
 #define Kp 0.1  // 10
-#define Ki 0.005  // 0.5
+#define Ki 0.005  // 0.5  podemos hacer Ki=0 (control PD) y epsilon=0.05
 #define Kd -0.005  // -0.5
 
 float k[6] = {2631.1, 1782.1, 1400.2, 571, 327, 173};
@@ -47,85 +67,95 @@ char string_1[17] = "1234567890123456";
 
 char string_2[17] = "1234567890123456";
 
+volatile char entrada;
+
+uint8_t controlar = 0;
+int int_f_medida = 0;
+
+void IRAM_ATTR isr(void* arg) {
+  Button* s = static_cast<Button*>(arg);
+  s->pressed = true;
+}
+
 void imprimir_referencia_1(void)
 {
   int m = freq_cuerdas[cuerda_actual - 1];
-    /*
-    |[5]:A3  -> 110Hz|
-    */
-    string_1[0] = '[';
-    string_1[1] = numeros_str[cuerda_actual];
-    string_1[2] = ']';
-    string_1[3] = ':';
-    string_1[4] = tabla_notas[m][0];
-    string_1[5] = tabla_notas[m][1];
-    string_1[6] = tabla_notas[m][2];
-    string_1[7] = ' ';
-    string_1[8] = '-';
-    string_1[9] = '>';
-    string_1[10] = ' ';
+  /*
+  |[5]:A3  -> 110Hz|
+  */
+  string_1[0] = '[';
+  string_1[1] = numeros_str[cuerda_actual];
+  string_1[2] = ']';
+  string_1[3] = ':';
+  string_1[4] = tabla_notas[m][0];
+  string_1[5] = tabla_notas[m][1];
+  string_1[6] = tabla_notas[m][2];
+  string_1[7] = ' ';
+  string_1[8] = '-';
+  string_1[9] = '>';
+  string_1[10] = ' ';
 
-    int int_f = tabla_frecuencias[m];
-    char str[3];
-    sprintf(str, "%d", int_f);
+  int int_f = tabla_frecuencias[m];
+  char str[3];
+  sprintf(str, "%d", int_f);
 
-     string_1[11] = str[0];
-    string_1[12] = str[1];
+  string_1[11] = str[0];
+  string_1[12] = str[1];
 
-    if (m < 8)
-    {
-      string_1[13] = 'H';
-      string_1[14] = 'z';
-      string_1[15] = ' ';
-    }
-    else
-    {
-      string_1[13] = str[2];
-      string_1[14] = 'H';
-      string_1[15] = 'z';
-    }
+  if (m < 8)
+  {
+    string_1[13] = 'H';
+    string_1[14] = 'z';
+    string_1[15] = ' ';
+  }
+  else
+  {
+    string_1[13] = str[2];
+    string_1[14] = 'H';
+    string_1[15] = 'z';
+  }
 
 }
 
 void imprimir_referencia_2(void)
 {
   int m = freq_cuerdas[cuerda_actual - 1];
-    /*
-    |[5]:A3  -> 110Hz|
-    */
+  /*
+  |5:[A3 ] -> 110Hz|
+  */
 
-    string_1[0] = numeros_str[cuerda_actual];
+  string_1[0] = numeros_str[cuerda_actual];
 
-    string_1[1] = ':';
-    string_1[2] = '[';
-    string_1[3] = tabla_notas[m][0];
-    string_1[4] = tabla_notas[m][1];
-    string_1[5] = tabla_notas[m][2];
-    string_1[6] = ']';
-    string_1[7] = ' ';
-    string_1[8] = '-';
-    string_1[9] = '>';
-    string_1[10] = ' ';
+  string_1[1] = ':';
+  string_1[2] = '[';
+  string_1[3] = tabla_notas[m][0];
+  string_1[4] = tabla_notas[m][1];
+  string_1[5] = tabla_notas[m][2];
+  string_1[6] = ']';
+  string_1[7] = ' ';
+  string_1[8] = '-';
+  string_1[9] = '>';
+  string_1[10] = ' ';
 
-    int int_f = tabla_frecuencias[m];
-    char str[3];
-    sprintf(str, "%d", int_f);
+  int int_f = tabla_frecuencias[m];
+  char str[3];
+  sprintf(str, "%d", int_f);
 
-     string_1[11] = str[0];
-    string_1[12] = str[1];
+  string_1[11] = str[0];
+  string_1[12] = str[1];
 
-    if (m < 8)
-    {
-      string_1[13] = 'H';
-      string_1[14] = 'z';
-      string_1[15] = ' ';
-    }
-    else
-    {
-      string_1[13] = str[2];
-      string_1[14] = 'H';
-      string_1[15] = 'z';
-    }
+  if (m < 8)
+  {
+    string_1[13] = 'H';
+    string_1[14] = 'z';
+    string_1[15] = ' ';
+  }
+  else
+  {
+    string_1[13] = str[2];
+    string_1[14] = 'H';
+    string_1[15] = 'z';
+  }
 
 
 }
@@ -144,7 +174,19 @@ void imprimir_medido(void)
   string_2[6] = ':';
   string_2[7] = ' ';
 
-  int int_f_medida = frecuencia_medida;
+  float frecuencia_referencia = tabla_frecuencias[freq_cuerdas[cuerda_actual-1]];
+  error = frecuencia_referencia - frecuencia_medida;
+
+  // Esto es para cuando ya paró por epsilon pero quedó en .9
+  if (fabs(error) < epsilon)
+  {
+    int_f_medida = frecuencia_referencia;
+  }
+  else
+  {
+    int_f_medida = frecuencia_medida;
+  }
+
   char str[3];
   sprintf(str, "%d", int_f_medida);
 
@@ -236,7 +278,8 @@ void imprimir_notas(void)
 
 void imprimir_pantalla(void)
 {
-    // Seleccionar parte de arriba (0, 0)
+  // Se mueve el cursor al (0, 0)
+  lcd.home();
   if (selector == 0)
   {
     imprimir_referencia_1();
@@ -246,7 +289,11 @@ void imprimir_pantalla(void)
     imprimir_referencia_2();
   }
 
-  // Seleccionar parte de abajo (0, 1)
+  // Se imprime la primera línea
+  lcd.print(string_1);
+
+  // Se mueve el cursor al (0, 1)
+  lcd.setCursor(0, 1);
   if (modo == 0)
   {
     imprimir_medido();
@@ -259,150 +306,200 @@ void imprimir_pantalla(void)
   {
     imprimir_notas();
   }
+
+  // Se imprime la segunda línea
+  lcd.print(string_2);
 }
 
 void control(void)
 {
   float frecuencia_referencia = tabla_frecuencias[freq_cuerdas[cuerda_actual-1]];
 
-      // printf("frecuencia: %f\n", frecuencia_referencia);
+  // printf("frecuencia: %f\n", frecuencia_referencia);
+  error = frecuencia_referencia - frecuencia_medida;
 
-      error = frecuencia_referencia - frecuencia_medida;
+  // printf("error: %f\n", error);
+  if (fabs(error) > epsilon)
+  {
+    integral = integral + error;
+  }
+  derivada = error - error_anterior;
 
-      // printf("error: %f\n", error);
+  salida_PID = (Kp * error) + (Ki * integral) + (Kd * derivada);
 
+  if (salida_PID < MIN)
+  {
+    salida_PID = MIN;
+  }
+  else if (salida_PID > MAX)
+  {
+    salida_PID = MAX;
+  }
 
-      if (fabs(error) > epsilon)
-      {
-        integral = integral + error;
-      }
-      derivada = error - error_anterior;
+  // printf("Salida: %f\n", salida_PID);
 
-      salida_PID = (Kp * error) + (Ki * integral) + (Kd * derivada);
-
-      if (salida_PID < MIN)
-      {
-        salida_PID = MIN;
-      }
-      else if (salida_PID > MAX)
-      {
-        salida_PID = MAX;
-      }
-
-      // printf("Salida: %f\n", salida_PID);
-
-
-      frecuencia_medida = k[cuerda_actual-1]/frecuencia_medida* salida_PID + frecuencia_medida;
+  // Simulación de planta
+  frecuencia_medida = k[cuerda_actual-1]/frecuencia_medida* salida_PID + frecuencia_medida;
 }
 
-int main(void)
-{
-    // printf("\n");
-    // printf("\n");
 
-    char entrada;
+void setup()
+{
+  entrada = 'a';
+  Serial.begin(115200);
+  // Configuración de pines
+  pinMode(button_enter.PIN, INPUT_PULLUP);
+  attachInterruptArg(button_enter.PIN, isr, &button_enter, FALLING);
+  pinMode(button_left.PIN, INPUT_PULLUP);
+  attachInterruptArg(button_left.PIN, isr, &button_left, FALLING);
+  pinMode(button_right.PIN, INPUT_PULLUP);
+  attachInterruptArg(button_right.PIN, isr, &button_right, FALLING);
+  pinMode(button_control.PIN, INPUT_PULLUP);
+  attachInterruptArg(button_control.PIN, isr, &button_control, FALLING);
+
+  // Se inicializa el display
+  lcd.begin(16, 2);
+  // Se mueve el cursor al (0, 0)
+  lcd.home();
+
+}
+
+void loop()
+{
+  imprimir_pantalla();
+
+  if (button_enter.pressed)
+  {
+    entrada = 'm';
+    Serial.printf("Enter\n");
+  }
+  else if (button_left.pressed)
+  {
+    entrada = 'a';
+    Serial.printf("Left\n");
+  }
+  else if (button_right.pressed)
+  {
+    entrada = 'd';
+    Serial.printf("Right\n");
+  }
+  else if (button_control.pressed)
+  {
+  	entrada = 'c';
+    Serial.printf("Control\n");
+    if (controlar)
+    {
+      controlar = 0;
+    }
+    else
+    {
+      controlar = 1;
+    }
+  }
+  button_enter.pressed = false;
+  button_left.pressed = false;
+  button_right.pressed = false;
+  button_control.pressed = false;
+
+  if (controlar)
+  {
+    control();
+    float frecuencia_referencia = tabla_frecuencias[freq_cuerdas[cuerda_actual-1]];
+    error = frecuencia_referencia - frecuencia_medida;
+    // Parar si el error es muy chico
+    if (fabs(error) < epsilon)
+    {
+      controlar = 0;
+    }
+  }
+  else
+  {
+    // printf("\n");
+    // printf("\n");
     // printf(">> ");
     // scanf("%s", &entrada);
-    while (entrada != '0')
+    /*
+    if (entrada == 'j')
     {
-
-      if (entrada == 'j')
+      if (cuerda_actual < 6)
       {
-        if (cuerda_actual < 6)
-        {
-          cuerda_actual++;
-        }
-        else
-        {
-          cuerda_actual = 1;
-        }
-        frecuencia_medida = tabla_frecuencias[freq_cuerdas[cuerda_actual-1]]-20/cuerda_actual;
-
-        integral = 0;
+        cuerda_actual++;
       }
-
-
-
-      printf("\n");
-      imprimir_pantalla();
-      printf("|%s|\n", string_1);
-      printf("|%s|\n", string_2);
-      printf(">> ");
-      scanf("%s", &entrada);
-
-      if (entrada == 'm')
+      else
       {
-        if (selector == 0 & modo == 0)
-        {
-          modo = 1;
-        }
-        else if (selector == 1 & modo == 0)
-        {
-          modo = 2;
-        }
-        else
-        {
-          modo = 0;
-        }
+        cuerda_actual = 1;
       }
-      else if (entrada == 'a' | entrada == 'd')
-      {
-        if (modo == 0)
-        {
-          selector = (selector + 1)%2;
-        }
-        else if (modo == 1)
-        {
-          if (cuerda_actual == 1 & entrada == 'a')
-          {
-            //
-          }
-          else if (cuerda_actual == 6 & entrada == 'd')
-          {
-            //
-          }
-          else if (entrada == 'a')
-          {
-            cuerda_actual --;
-          }
-          else if (entrada == 'd')
-          {
-            cuerda_actual ++;
-          }
-        }
-        else
-        {
-          int n = freq_cuerdas[cuerda_actual - 1];
-          if (n == 0 & entrada == 'a')
-          {
-            //
-          }
-          else if (n == 31 & entrada == 'd')
-          {
-            //
-          }
-          else if (entrada == 'a')
-          {
-            freq_cuerdas[cuerda_actual - 1] = freq_cuerdas[cuerda_actual - 1] - 1;
-          }
-          else if (entrada == 'd')
-          {
-            freq_cuerdas[cuerda_actual - 1] = freq_cuerdas[cuerda_actual - 1] + 1;
-          }
-        }
-      }
-      if (entrada == 'c')
-        {
-          control();
-        }
+      frecuencia_medida = tabla_frecuencias[freq_cuerdas[cuerda_actual-1]]-20/cuerda_actual;
 
-
-      // control();
-
-
+      integral = 0;
     }
+    */
 
+    // printf("\n");
 
-    return 0;
+    if (entrada == 'm')
+    {
+      if (selector == 0 & modo == 0)
+      {
+        modo = 1;
+      }
+      else if (selector == 1 & modo == 0)
+      {
+        modo = 2;
+      }
+      else
+      {
+        modo = 0;
+      }
+    }
+    else if (entrada == 'a' | entrada == 'd')
+    {
+      if (modo == 0)
+      {
+        selector = (selector + 1)%2;
+      }
+      else if (modo == 1)
+      {
+        if (cuerda_actual == 1 & entrada == 'a')
+        {
+          //
+        }
+        else if (cuerda_actual == 6 & entrada == 'd')
+        {
+          //
+        }
+        else if (entrada == 'a')
+        {
+          cuerda_actual --;
+        }
+        else if (entrada == 'd')
+        {
+          cuerda_actual ++;
+        }
+      }
+      else
+      {
+        int n = freq_cuerdas[cuerda_actual - 1];
+        if (n == 0 & entrada == 'a')
+        {
+          //
+        }
+        else if (n == 31 & entrada == 'd')
+        {
+          //
+        }
+        else if (entrada == 'a')
+        {
+          freq_cuerdas[cuerda_actual - 1] = freq_cuerdas[cuerda_actual - 1] - 1;
+        }
+        else if (entrada == 'd')
+        {
+          freq_cuerdas[cuerda_actual - 1] = freq_cuerdas[cuerda_actual - 1] + 1;
+        }
+      }
+    }
+  }
+
+  entrada = '';
 
 }
